@@ -55,6 +55,12 @@ public class TransformerClassWriter extends ClassWriter {
         ClassLoader classLoader = getClassLoader();
         ClassEntry class1 = get(classpath, classLoader, output, type1);
         ClassEntry class2 = get(classpath, classLoader, output, type2);
+        if (class1 == null) {
+            System.out.println(type1 + " is not present, cannot determine a common superclass for it and for " + type2);
+        }
+        if (class2 == null) {
+            System.out.println(type2 + " is not present, cannot determine a common superclass for it and for " + type1);
+        }
         if (isAssignableFrom(class1, class2)) {
             return type1;
         }
@@ -66,7 +72,7 @@ public class TransformerClassWriter extends ClassWriter {
         } else {
             do {
                 class1 = class1.getSuperclass();
-            } while (!isAssignableFrom(class1, class2));
+            } while (!isAssignableFrom(class1, class2) && class1 != null);
             return class1.getName().replace('.', '/');
         }
     }
@@ -89,7 +95,8 @@ public class TransformerClassWriter extends ClassWriter {
             } catch (IOException ex) {
                 throw new UncheckedIOException(ex);
             }
-            throw new TypeNotPresentException(type, e);
+            System.out.println("Could not load type " + type);
+            return null;
         }
     }
     
@@ -111,6 +118,9 @@ public class TransformerClassWriter extends ClassWriter {
         if (base.getName().equals(impl.getName())) return true;
         while (!Objects.equals(impl.getName(), ObjectClassEntry.INSTANCE.getName())) {
             impl = impl.getSuperclass();
+            if (impl == null) {
+                return false;
+            }
             if (base.getName().equals(impl.getName())) return true;
         }
         return false;
